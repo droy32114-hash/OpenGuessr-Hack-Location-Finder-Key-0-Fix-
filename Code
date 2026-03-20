@@ -1,0 +1,56 @@
+// ==UserScript==
+// @name         OpenGuessr Hack Location Finder (Key 0 Fix)
+// @namespace    https://openguessr.com/
+// @version      2.3
+// @description  Press 0 to open location in Google Maps
+// @author       YourName
+// @match        *://openguessr.com/*
+// @grant        none
+// @run-at       document-start
+// ==/UserScript==
+
+(function () {
+    'use strict';
+
+    function findAndOpenLocation() {
+        // Look for the specific ID or ANY iframe that contains google maps data
+        const iframe = document.querySelector('#PanoramaIframe') || document.querySelector('iframe[src*="google.com/maps"]');
+
+        if (iframe) {
+            const src = iframe.getAttribute('src');
+            if (src) {
+                try {
+                    const url = new URL(src);
+                    // OpenGuessr usually puts the coords in the 'location' or 'q' parameter
+                    const location = url.searchParams.get('location') || url.searchParams.get('q');
+
+                    if (location) {
+                        const mapsUrl = `https://www.google.com/maps?q=${location}`;
+                        console.log('Opening Location:', mapsUrl);
+                        window.open(mapsUrl, '_blank');
+                    } else {
+                        console.error('Coordinates not found in iframe URL.');
+                        alert("Location data not ready yet. Move slightly or wait a second.");
+                    }
+                } catch (error) {
+                    console.error('Error parsing URL:', error);
+                }
+            }
+        } else {
+            console.error('Map iframe not found.');
+        }
+    }
+
+    // Listen for the "0" key
+    document.addEventListener('keydown', (event) => {
+        // If you are typing in a chat box, don't trigger the hack
+        if (event.target.tagName === 'INPUT' || event.target.tagName === 'TEXTAREA') return;
+
+        if (event.key === '0') {
+            event.preventDefault(); // Stop 0 from being typed
+            findAndOpenLocation();
+        }
+    });
+
+    console.log('OpenGuessr Hack Loaded: Press 0 to find location.');
+})();
